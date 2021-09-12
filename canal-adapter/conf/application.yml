@@ -1,0 +1,46 @@
+server:
+  port: 8081
+spring:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+canal.conf:
+  mode: kafka #tcp kafka rocketMQ rabbitMQ
+  flatMessage: true
+  zookeeperHosts:
+  syncBatchSize: 1000
+  retries: 0
+  timeout:
+  # 这两行不要删
+  accessKey:
+  secretKey:
+  consumerProperties:
+    # canal tcp consumer
+    # canal.tcp.server.host: 127.0.0.1:11111
+    # canal.tcp.zookeeper.hosts:
+    # canal.tcp.batch.size: 500
+    # canal.tcp.username:
+    # canal.tcp.password:
+    # kafka consumer
+    kafka.bootstrap.servers: kafka-broker:9092
+    kafka.enable.auto.commit: false
+    # kafka.auto.commit.interval.ms: 1000
+    kafka.auto.offset.reset: latest
+    kafka.request.timeout.ms: 40000
+    kafka.session.timeout.ms: 30000
+    kafka.isolation.level: read_committed
+    kafka.max.poll.records: 1000
+  canalAdapters: # 适配器列表
+    - instance: binlog # canal 实例名或者 MQ topic 名
+      groups: # 分组列表
+        - groupId: g1 # 分组id, 如果是MQ模式将用到该值
+          outerAdapters: # 分组内适配器列表
+            - name: logger # 日志打印适配器
+            - name: es7
+              key: goods
+              hosts: es:9300
+              properties:
+                mode: transport # or rest
+

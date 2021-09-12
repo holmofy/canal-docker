@@ -1,0 +1,97 @@
+version: "3"
+
+services:
+  mysql:
+    image: mysql:5.7.35
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=xudjf23adj213
+      - MYSQL_DATABASE=apollo
+      - MYSQL_USER=apollo
+      - MYSQL_PASSWORD=apollo-passwd
+    volumes:
+      - ./mysql/init.d:/docker-entrypoint-initdb.d
+      - ./mysql/conf.d/mysql.conf:/etc/mysql/my.cnf
+    # - ./.data/mysql:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.0
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  zookeeper:
+    image: zookeeper:3.5.9
+    ports:
+      - 2181:2181
+  kafka-broker:
+    image: wurstmeister/kafka:2.13-2.7.0
+    ports:
+      - 19092:19092
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      - KAFKA_LISTENERS=INSIDE://:9092,OUTSIDE://:19092
+      - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9092,OUTSIDE://localhost:19092
+      #- KAFKA_ADVERTISED_LISTENERS=INSIDE://:9092,OUTSIDE://report:19092
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
+      #- KAFKA_CREATE_TOPICS=trade:2:1,sms:2:1
+  canal:
+    image: holmofy/canal-server:v1.1.5
+    build:
+      context: ./canal-server
+      dockerfile: Dockerfile
+    depends_on:
+      - mysql
+      - kafka-broker
+    ports:
+      - 5005:5005
+      - 11110:11110 # admin
+      - 11111:11111 # canal
+      - 11112:11112 # metrics
+      - 9100:9100 # exporter
+    environment:
+      - canal.destinations=test-demo
+      - canal.auto.scan=false
+      - canal.instance.mysql.slaveId=1111
+      - canal.instance.master.address=mysql:3306
+      - canal.instance.dbUsername=canal
+      - canal.instance.dbPassword=canal
+      - canal.instance.connectionCharset=UTF-8
+      - canal.instance.tsdb.enable=true
+      - canal.instance.gtidon=true
+      - canal.serverMode=kafka
+      - canal.mq.servers=kafka-broker:9092
+      - canal.mq.retries=3
+      - canal.mq.flatMessage=true
+      - canal.mq.topic=binlog
+      - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+  canal-admin:
+    image: holmofy/canal-admin:v1.1.5
+    build:
+      context: ./canal-admin
+      dockerfile: Dockerfile
+    depends_on:
+      - mysql
+    ports:
+      - 8089:8089
+    volumes:
+      - ./canal-admin/conf/application.yml:/canal-admin/conf/application.yml
+  canal-adapter:
+    image: holmofy/canal-adapter:v1.1.5
+    build:
+      context: ./canal-adapter
+      dockerfile: Dockerfile
+    depends_on:
+      - mysql
+      - es
+    ports:
+      - 8081:8081
+    volumes:
+      - ./canal-adapter/conf/application.yml:/canal-adapter/conf/application.yml
+      - ./canal-adapter/conf/bootstrap.yml:/canal-adapter/conf/bootstrap.yml
