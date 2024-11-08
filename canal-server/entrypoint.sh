@@ -17,7 +17,7 @@ cmd=$1
 case $cmd in
 "startup" | "restart")
   sh "/canal-server/bin/${cmd}.sh" &&
-    sleep 5s && cat /canal-server/logs/canal/canal.log &&
+    sleep 10s && cat /canal-server/logs/canal/canal_stdout.log &&
     tail -F "/canal-server/logs/$destination/$destination.log"
   ;;
 "stop")

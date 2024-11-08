@@ -1,6 +1,6 @@
 FROM openjdk:8-jre-alpine
 
-ENV VERSION=1.1.5
+ENV VERSION=1.1.7
 
 # download
 RUN wget https://github.com/alibaba/canal/releases/download/canal-${VERSION}/canal.adapter-${VERSION}.tar.gz -O /tmp/canal.adapter.tar.gz && \

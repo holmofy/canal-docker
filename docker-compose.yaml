@@ -42,7 +42,7 @@ services:
       - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
       #- KAFKA_CREATE_TOPICS=trade:2:1,sms:2:1
   canal:
-    image: holmofy/canal-server:v1.1.5
+    image: holmofy/canal-server:v1.1.7
     build:
       context: ./canal-server
       dockerfile: Dockerfile
@@ -56,23 +56,23 @@ services:
       - 11112:11112 # metrics
       - 9100:9100 # exporter
     environment:
-      - canal.destinations=test-demo
-      - canal.auto.scan=false
-      - canal.instance.mysql.slaveId=1111
-      - canal.instance.master.address=mysql:3306
-      - canal.instance.dbUsername=canal
-      - canal.instance.dbPassword=canal
-      - canal.instance.connectionCharset=UTF-8
-      - canal.instance.tsdb.enable=true
-      - canal.instance.gtidon=true
+      # - canal.destinations=test-demo
+      # - canal.auto.scan=false
+      # - canal.instance.mysql.slaveId=1111
+      # - canal.instance.master.address=mysql:3306
+      # - canal.instance.dbUsername=canal
+      # - canal.instance.dbPassword=canal
+      # - canal.instance.connectionCharset=UTF-8
+      # - canal.instance.tsdb.enable=true
+      # - canal.instance.gtidon=true
       - canal.serverMode=kafka
-      - canal.mq.servers=kafka-broker:9092
-      - canal.mq.retries=3
-      - canal.mq.flatMessage=true
-      - canal.mq.topic=binlog
+      # - canal.mq.servers=kafka-broker:9092
+      # - canal.mq.retries=3
+      # - canal.mq.flatMessage=true
+      # - canal.mq.topic=binlog
       - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
   canal-admin:
-    image: holmofy/canal-admin:v1.1.5
+    image: holmofy/canal-admin:v1.1.7
     build:
       context: ./canal-admin
       dockerfile: Dockerfile
@@ -83,7 +83,7 @@ services:
     volumes:
       - ./canal-admin/conf/application.yml:/canal-admin/conf/application.yml
   canal-adapter:
-    image: holmofy/canal-adapter:v1.1.5
+    image: holmofy/canal-adapter:v1.1.7
     build:
       context: ./canal-adapter
       dockerfile: Dockerfile
